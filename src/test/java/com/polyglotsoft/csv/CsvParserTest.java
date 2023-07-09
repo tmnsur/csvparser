@@ -1,4 +1,4 @@
-package com.en.util;
+package com.polyglotsoft.csv;
 
 import org.junit.Test;
 
@@ -125,7 +125,11 @@ public class CsvParserTest {
 
     @Test
     public void shouldParseEscapedQuotation() {
-        String[] result = csvParser.parseLine("addr\"\"ess\"\"8@domain.com");
+        String[] result = csvParser.parseLine("\"\"a\"\"");
+        assertEquals(1, result.length);
+        assertEquals("\"a\"", result[0]);
+
+        result = csvParser.parseLine("addr\"\"ess\"\"8@domain.com");
         assertEquals(1, result.length);
         assertEquals("addr\"ess\"8@domain.com", result[0]);
     }
@@ -356,5 +360,20 @@ public class CsvParserTest {
         assertEquals("\"", result[0]);
         assertEquals("", result[1]);
     }
-}
 
+    @Test
+    public void shouldParseDoubleEscapedContent() {
+        String[] result = csvParser.parseLine("\"\"\"a\"\"\"");
+
+        assertEquals(1, result.length);
+        assertEquals("\"a\"", result[0]);
+    }
+
+    @Test
+    public void shouldParseDoubleDoubleEscapedContent() {
+        String[] result = csvParser.parseLine("\"\"\"\"\"a\"\"\"\"\"");
+
+        assertEquals(1, result.length);
+        assertEquals("\"\"a\"\"", result[0]);
+    }
+}

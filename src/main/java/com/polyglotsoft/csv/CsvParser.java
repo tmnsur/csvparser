@@ -1,4 +1,4 @@
-package com.en.util;
+package com.polyglotsoft.csv;
 
 import java.util.List;
 
@@ -97,8 +97,9 @@ public class CsvParser {
         int index = -1;
         int shrankLength = end - start;
         char[] shrankChars = null;
+
         for (int i = start; i < end; ++i) {
-            if (7 == chars[i]) {
+            if (7 == chars[i] || (quotation == chars[i] && i + 1 < end && 7 == chars[i + 1])) {
                 if (null == shrankChars) {
                     shrankChars = new char[end - start - 1];
 
@@ -106,13 +107,15 @@ public class CsvParser {
                     if (0 < currentLength) {
                         System.arraycopy(chars, start, shrankChars, start, i - start);
 
-                        index = currentLength  - 1;
+                        index = currentLength - 1;
                     }
                 }
 
-                --shrankLength;
+                if (7 == chars[i]) {
+                    --shrankLength;
 
-                continue;
+                    continue;
+                }
             }
 
             if (null != shrankChars) {
@@ -162,14 +165,43 @@ public class CsvParser {
 
                         if (emptyQuotes) {
                             chars[i] = 7;
+                        } else {
+                            boolean validQuotation = true;
+                            for (int j = i - 1; j != lastDelimiter; --j) {
+                                if (!Character.isWhitespace(chars[j])) {
+                                    validQuotation = false;
+                                    break;
+                                }
+                            }
+
+                            if (validQuotation) {
+                                lastQuotationStart = i - 1;
+                                quoted = true;
+                            }
                         }
                     }
 
                     chars[i + 1] = 7;
                 } else {
                     if (quoted) {
-                        lastQuotationEnd = i;
-                        quoted = false;
+                        boolean escapedQuotation = true;
+                        for (int j = i - 1; j != lastDelimiter; --j) {
+                            if (7 != chars[j] && quotation != chars[j]) {
+                                escapedQuotation = false;
+                                break;
+                            }
+                        }
+
+                        if (escapedQuotation) {
+                            chars[i] = 7;
+                        } else {
+                            if (2 < i && 7 == chars[i - 1] && quotation == chars[i - 2] && i == chars.length - 1) {
+                                chars[i - 2] = 7;
+                            }
+
+                            lastQuotationEnd = i;
+                            quoted = false;
+                        }
                     } else {
                         boolean validQuotation = true;
                         for (int j = i - 1; j != lastDelimiter; --j) {
@@ -255,4 +287,3 @@ public class CsvParser {
         return result;
     }
 }
-
